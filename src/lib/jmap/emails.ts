@@ -10,7 +10,7 @@ import { storeMessageAttachments } from "@/lib/email/attachments";
 import { deleteMessageWithObjects } from "@/lib/email/message-cleanup";
 import { LIMITS, KEYWORD_FLAGGED, KEYWORD_SEEN } from "./constants";
 import { JmapError, invalidArguments } from "./errors";
-import { decodeBlobId, decodeMailboxRef, roleToStatus } from "./ids";
+import { decodeBlobId, decodeMailboxRef, patchTokens, roleToStatus } from "./ids";
 import { buildEmailObject, loadAttachmentsByMessage, resolveHeaderProperty } from "./email-objects";
 import { importFlags, parseReceivedAt, resolveDraftsMailbox } from "./email-import-utils";
 import { filterToSql, mailboxRefCondition, sortToSql } from "./email-query";
@@ -162,10 +162,8 @@ function targetFromMailboxIds(row: MessageRow, patch: Record<string, unknown>, a
 	} else {
 		const current = new Set(Object.keys(buildEmailObject(row, [], { fetchBodies: false, maxBodyValueBytes: 0 }).mailboxIds));
 		let touched = false;
-		for (const [key, value] of Object.entries(patch)) {
-			if (!key.startsWith("mailboxIds/")) continue;
+		for (const [id, value] of patchTokens(patch, "mailboxIds/")) {
 			touched = true;
-			const id = key.slice("mailboxIds/".length);
 			if (value) current.add(id);
 			else current.delete(id);
 		}
@@ -193,9 +191,7 @@ function keywordsFromPatch(patch: Record<string, unknown>): { read?: boolean; st
 		result.read = !!map[KEYWORD_SEEN];
 		result.starred = !!map[KEYWORD_FLAGGED];
 	}
-	for (const [key, value] of Object.entries(patch)) {
-		if (key.startsWith("keywords/")) apply(key.slice("keywords/".length), value);
-	}
+	for (const [keyword, value] of patchTokens(patch, "keywords/")) apply(keyword, value);
 	return result;
 }
 

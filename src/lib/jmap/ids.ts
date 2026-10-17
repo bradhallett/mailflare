@@ -24,6 +24,18 @@ export function decodeMailboxRef(id: string): MailboxRef | null {
 	return null;
 }
 
+/**
+ * RFC 8620 §5.3 patch keys are RFC 6901 pointers, so a token containing `~`
+ * arrives escaped (`~0`, with `/` as `~1`) — Mailflare's role and folder refs
+ * all contain `~`, and clients like ByteMail escape correctly. `~1` must be
+ * unescaped before `~0`, or `~01` decodes as `/` instead of `~1`.
+ */
+export function* patchTokens(patch: Record<string, unknown>, prefix: string): Generator<[string, unknown]> {
+	for (const [key, value] of Object.entries(patch)) {
+		if (key.startsWith(prefix)) yield [key.slice(prefix.length).replaceAll("~1", "/").replaceAll("~0", "~"), value];
+	}
+}
+
 /** Blob ids name either a stored attachment, a message's raw MIME, or a client upload. */
 export function attachmentBlobId(attachmentId: string): string {
 	return `att${SEP}${attachmentId}`;
