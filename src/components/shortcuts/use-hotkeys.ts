@@ -96,6 +96,10 @@ export function useHotkeys(
       if (isModifierKey(key)) return;
 
       if (e.target instanceof Element && e.target.closest('[role="dialog"], [role="menu"], [role="listbox"]')) return;
+      // Modifier combos belong to the browser/OS (Cmd+C copy, Cmd+R reload);
+      // sequences are single bare keys, so never buffer or match them.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
 
       // Handle sequence buffer
       sequenceBufferRef.current.push(key);
