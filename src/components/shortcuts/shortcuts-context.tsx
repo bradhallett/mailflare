@@ -122,7 +122,7 @@ export function ShortcutsProvider({
         action: () => setIsHelpModalOpen((prev) => !prev),
       },
       {
-        key: "c",
+        key: "n",
         label: t("shortcut.compose"),
         category: "Composing",
         action: () => openComposer(),
